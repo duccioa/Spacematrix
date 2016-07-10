@@ -5,6 +5,7 @@ from subprocess import run
 import os
 import datetime
 import psycopg2
+import pandas as pd
 # OS Mastermap - Topographic layer
 # In order to import gml files of the OS Mastermap topographic layer, the script navigates through the data folder
 # retrive the name of the files with a specific extension and run ogr2ogr in the command shell
@@ -127,19 +128,21 @@ conn = psycopg2.connect(database="msc", user="postgres", password="postgres", ho
 print("Open conncetion: succesful")
 cur = conn.cursor()
 cur.execute('''
+DROP TABLE london_buildings.building_heights CASCADE;
 CREATE TABLE london_buildings.building_heights (
 os_topo_toid_digimap VARCHAR(48),
 os_topo_toid VARCHAR(48) NOT NULL,
 os_topo_version VARCHAR(48),
 bha_processdate VARCHAR(24),
 tileref VARCHAR(24),
-abshmin FLOAT DEFAULT 0 NULL,
-absh2 NUMERIC(4,1),
-abshmax NUMERIC(4,1),
-relh2 NUMERIC(4,1),
-relmax NUMERIC(4,1),
+abshmin NUMERIC(5, 2),
+absh2 NUMERIC(5, 2),
+abshmax NUMERIC(5, 2),
+relh2 NUMERIC(5, 2),
+relmax NUMERIC(5, 2),
 bha_conf VARCHAR(24),
-PRIMARY KEY (os_topo_toid)
+uid BIGSERIAL NOT NULL,
+PRIMARY KEY (uid)
 );
 ''')
 conn.commit()
@@ -147,16 +150,35 @@ conn.close()
 # Copy csv into the table
 path = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/'
 file_paths = []
+file_names = []
 for root, dirs, files in os.walk(path):
     for file in files:
         if file.endswith(".csv"):
             file_paths.append(root + '/' + file)
+		    file_names.append(file)
+
+
+building_heights = pd.DataFrame()
+for file in file_paths:
+	bh_temp = pd.read_csv(file)
+	building_heights = building_heights.append(bh_temp)
+duplicated = building_heights.duplicated() # There are a total of 7 rows completely duplicated
+building_heights.drop_duplicates(keep='first', inplace=True)
+duplicated_ids = building_heights.duplicated('os_topo_toid')
+duplicated_ids_digimap = building_heights.duplicated('os_topo_toid_digimap') # No other duplicates
+building_heights.to_csv('/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/building_heights.csv', index = False, index_label= False)
+
 
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
 print("Open conncetion: succesful")
 cur = conn.cursor()
-for path in file_paths[0:2]:
-	sql_statement = 'COPY london_buildings.building_heights FROM \'' + path + '\' DELIMITER ',' CSV;'
+for i in range(0,len(file_paths)):
+	dt = datetime.datetime.now()
+	print("START: " + file_names[i])
+	print('Start Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+	sql_statement = 'COPY london_buildings.building_heights FROM \'' + file_paths[i] + '\' CSV HEADER;'
 	cur.execute('''%s''' %sql_statement)
+	dt = datetime.datetime.now()
+	print('Start Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 conn.commit()
 conn.close()
