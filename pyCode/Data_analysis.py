@@ -7,9 +7,10 @@ import psycopg2
 import pandas as pd
 
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
-print("Open conncetion: succesful")
+print("Open conncetion: successful")
+plots = pd.DataFrame()
 cur = conn.cursor()
-dt = datetime.datetime.now()
-print("Start conversion to typology")
-print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 cur.execute('''
+
+            ''')
+rows = cur.fetchall()

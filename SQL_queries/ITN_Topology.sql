@@ -38,16 +38,16 @@ SELECT AddTopoGeometryColumn(
 'holloway_itn',
 'topo_roadlink',
 'topo',
-'MULTIPOLYGON'
+'LINE'
 );
 -- Create topogeometries from a topo layer
 INSERT INTO holloway_itn.topo_roadlink (feat_name, topo)
 SELECT
-ogc_fid,
+edge_id,
 toTopoGeom(
-geom, 'itn_holloway_topology', 1, 0.05
+geom, 'holloway_itn_topology', 1, 0.05
 )
-FROM holloway_itn.roadlink;
+FROM holloway_itn_topology.edge;
 
 
-
+ALTER TABLE hollowa

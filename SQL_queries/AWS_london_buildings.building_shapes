@@ -1,0 +1,17 @@
+﻿ALTER TABLE london_buildings.building_shapes 
+	ADD PRIMARY KEY (ogc_fid);
+CREATE INDEX test_wkb_geometry_geom_idx
+  ON london_buildings.building_shapes
+  USING gist
+  (wkb_geometry);
+
+UPDATE london_buildings.building_shapes SET area = ST_area(s.wkb_geometry) FROM london_buildings.building_shapes s;
+DELETE london_buildings.building_shapes WHERE area = 0;
+-- Add area
+UPDATE london_buildings.building_shapes SET area = ST_area(s.wkb_geometry) FROM london_buildings.building_shapes s;
+-- Add n_floors
+UPDATE london_buildings.building_shapes SET n_floors = s.rel_h/3 FROM london_buildings.building_shapes s;
+-- Add compactness
+UPDATE london_buildings.building_shapes SET compactness = s.area/(ST_Area(ST_MinimumBoundingCircle(s.wkb_geometry)) FROM london_buildings.building_shapes s;
+
+

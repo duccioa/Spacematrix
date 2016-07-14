@@ -82,7 +82,7 @@ print("Job done")
 ############################################# WORK IN PROGRESS #########################################################
 # Convert to topology
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
-print("Open conncetion: succesful")
+print("Open conncetion: successful")
 cur = conn.cursor()
 dt = datetime.datetime.now()
 print("Start conversion to typology")
@@ -141,11 +141,32 @@ for i in range(1,len(file_names)):
 	dt = datetime.datetime.now()
 print("Job done")
 
+conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
+print("Open conncetion: successful")
+cur = conn.cursor()
+cur.execute('''
+CREATE TABLE london_plots.plots
+AS
+SELECT * FROM london_plots.predefined;
+UPDATE london_plots.plots
+SET wkb_geometry = cleanGeometry(wkb_geometry);
+ALTER TABLE london_plots.plots ADD PRIMARY KEY (ogc_fid);
+CREATE INDEX plots_geom_idx
+  ON london_plots.plots
+  USING gist
+  (wkb_geometry);
+''')
+conn.commit()
+conn.close()
+
+
+
+
 
 # OS Mastermap - Building Heights
 # Create table
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
-print("Open conncetion: succesful")
+print("Open conncetion: successful")
 cur = conn.cursor()
 cur.execute('''
 DROP TABLE london_buildings.building_heights CASCADE;
@@ -166,7 +187,7 @@ PRIMARY KEY (os_topo_toid)
 ''')
 conn.commit()
 conn.close()
-# Clean the data from duplicates
+# Clean the data from duplicates (already run)
 path = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/'
 file_paths = []
 file_names = []
@@ -186,7 +207,7 @@ duplicated_ids_digimap = building_heights.duplicated('os_topo_toid_digimap') # N
 building_heights.to_csv('/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/building_heights.csv', index = False, index_label= False)
 # Import to Postgresql
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
-print("Open conncetion: succesful")
+print("Open conncetion: successful")
 cur = conn.cursor()
 file = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/building_heights.csv'
 dt = datetime.datetime.now()
@@ -195,7 +216,7 @@ print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 sql_statement = 'COPY london_buildings.building_heights FROM \'' + file + '\' CSV HEADER;'
 cur.execute('''%s''' %sql_statement)
 dt = datetime.datetime.now()
-print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 conn.commit()
 conn.close()
 
@@ -203,7 +224,7 @@ conn.close()
 ## London's boroughs
 # Create SCHEMA
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
-print("Open conncetion: succesful")
+print("Open conncetion: successful")
 cur = conn.cursor()
 cur.execute('''
 DROP SCHEMA london CASCADE;
@@ -246,7 +267,7 @@ dt = datetime.datetime.now()
 print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 ## Greater London
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
-print("Open conncetion: succesful")
+print("Open conncetion: successful")
 cur = conn.cursor()
 cur.execute('''
 DROP TABLE london.greaterlondon CASCADE;
