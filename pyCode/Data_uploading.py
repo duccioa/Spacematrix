@@ -7,20 +7,22 @@ import psycopg2
 import pandas as pd
 
 
-# OS Mastermap - Topographic layer
+#### OS Mastermap - Topographic layer ####
+## Building footprint shapes
 # In order to import gml files of the OS Mastermap topographic layer, the script navigates through the data folder
-# retrive the name of the files with a specific extension and run ogr2ogr in the command shell
+# retrives the name of the files with a specific extension and run ogr2ogr in the command shell
 path = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/'
-ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=london_buildings" '
+ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=london_buildings"  SPATIAL_INDEX = FALSE '
 file_names = []
 file_roots = []
+# Retrieve file names and paths
 # See http://stackoverflow.com/questions/3964681/find-all-files-in-directory-with-extension-txt-in-python
 for root, dirs, files in os.walk(path):
     for file in files:
         if file.endswith(".gml.gz"):
             file_roots.append(root)
             file_names.append(file)
-# The import creates the table
+
 terminal_command = 'cd ' + file_roots[0] + '; ' + ogr_statement + file_names[0]
 # Start importing process
 dt = datetime.datetime.now()
@@ -42,14 +44,34 @@ for i in range(1, len(file_names)):
 	dt = datetime.datetime.now()
 	print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 print("Job done")
+# Create geometric index
+conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
+print("Open conncetion: successful")
+cur = conn.cursor()
+cur.execute('''
+CREATE INDEX topographicarea_wkb_geometry_geom_idx
+  ON london_buildings.topographicarea
+  USING gist
+  (wkb_geometry);
+CREATE INDEX topographicline_wkb_geometry_geom_idx
+  ON london_buildings.topographicline
+  USING gist
+  (wkb_geometry);
+CREATE INDEX cartographictext_wkb_geometry_geom_idx
+  ON london_buildings.cartographictext
+  USING gist
+  (wkb_geometry);
+''')
+conn.commit()
+conn.close()
 
 
-# OS Mastermap - ITN
+#### OS Mastermap - ITN ####
+## ITN file of the transportation network of England
 path = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/OS_ITN-Full_England/'
-ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=itn_test" '
+ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=england_itn"  SPATIAL_INDEX = FALSE '
 file_names = []
 file_roots = []
-# See http://stackoverflow.com/questions/3964681/find-all-files-in-directory-with-extension-txt-in-python
 for root, dirs, files in os.walk(path):
     for file in files:
         if file.endswith(".gml"):
@@ -66,8 +88,6 @@ dt = datetime.datetime.now()
 print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 # All the others are appended to the newly created table
 return_msg_itn = []
-ogr_statement = 'ogr2ogr -update -append -f "PostgreSQL" PG:"host=localhost ' \
-                'dbname=msc user=postgres password=postgres schemas=itn_test" '
 for i in range(2, len(file_names)):
 	file_name = file_names[i]
 	file_root = file_roots[i]
@@ -75,45 +95,49 @@ for i in range(2, len(file_names)):
 	dt = datetime.datetime.now()
 	print("Now running on" + file_root + "/" + file_name)
 	print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
-	return_msg_itn.append(run(terminal_command + " -skipfailures", shell=True))
+	return_msg_itn.append(run(terminal_command + " -skipfailures -append", shell=True))
 	dt = datetime.datetime.now()
 	print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 print("Job done")
-############################################# WORK IN PROGRESS #########################################################
-# Convert to topology
+# Create geometric index
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
 print("Open conncetion: successful")
 cur = conn.cursor()
-dt = datetime.datetime.now()
-print("Start conversion to typology")
-print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 cur.execute('''
-SELECT CreateTopology('itn_topo', 27700, 0.05);
-SELECT
-ogc_fid,
-TopoGeo_AddLineString(
-'itn_topo', wkb_geometry
-) As edge_id
-FROM (
-SELECT ogc_fid, wkb_geometry FROM england_itn.roadlink
-) As f;
+CREATE INDEX ferrynode_wkb_geometry_geom_idx
+  ON england_itn.ferrynode
+  USING gist
+  (wkb_geometry);
+CREATE INDEX informationpoint_wkb_geometry_geom_idx
+  ON england_itn.informationpoint
+  USING gist
+  (wkb_geometry);
+CREATE INDEX roadlink_wkb_geometry_geom_idx
+  ON england_itn.roadlink
+  USING gist
+  (wkb_geometry);
+CREATE INDEX roadlinkinformation_wkb_geometry_geom_idx
+  ON england_itn.roadlinkinformation
+  USING gist
+  (wkb_geometry);
+CREATE INDEX roadnode_wkb_geometry_geom_idx
+  ON england_itn.roadnode
+  USING gist
+  (wkb_geometry);
+CREATE INDEX roadrouteinformation_wkb_geometry_geom_idx
+  ON england_itn.roadrouteinformation
+  USING gist
+  (wkb_geometry);
 ''')
-dt = datetime.datetime.now()
-print("Conversion done")
-print('Ending Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 conn.commit()
 conn.close()
-########################################################################################################################
 
-
-
-
-# INSPIRE
+#### INSPIRE ####
+## Cadastral parcels
 path = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/INSPIRE/'
-ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=london_plots" '
+ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=london_plots" SPATIAL_INDEX = FALSE '
 file_names = []
 file_roots = []
-# See http://stackoverflow.com/questions/3964681/find-all-files-in-directory-with-extension-txt-in-python
 for root, dirs, files in os.walk(path):
     for file in files:
         if file.endswith(".gml"):
@@ -140,7 +164,7 @@ for i in range(1,len(file_names)):
 	return_msg.append(run(terminal_command + ' -append', shell=True))
 	dt = datetime.datetime.now()
 print("Job done")
-
+# Clean geometry and create geometry index
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
 print("Open conncetion: successful")
 cur = conn.cursor()
@@ -163,7 +187,8 @@ conn.close()
 
 
 
-# OS Mastermap - Building Heights
+#### OS Mastermap ####
+## Building Heights
 # Create table
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
 print("Open conncetion: successful")
@@ -187,7 +212,7 @@ PRIMARY KEY (os_topo_toid)
 ''')
 conn.commit()
 conn.close()
-# Clean the data from duplicates (already run)
+# Clean the data from duplicates (run once)
 path = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/OS/'
 file_paths = []
 file_names = []
@@ -220,7 +245,7 @@ print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 conn.commit()
 conn.close()
 
-### Import boundary shapefiles
+#### London's administrative boundaries ####
 ## London's boroughs
 # Create SCHEMA
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
@@ -265,6 +290,7 @@ print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 return_code = run(terminal_command, shell=True)  # import the first file to create the table
 dt = datetime.datetime.now()
 print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+
 ## Greater London
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
 print("Open conncetion: successful")

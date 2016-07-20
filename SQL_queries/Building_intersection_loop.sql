@@ -17,7 +17,13 @@ select * from london_buildings.test_shapes where ST_within(wkb_geometry, (select
 
 ---------------- INTERSECTION QUERY ------------------------
 --- http://postgis.net/2014/03/14/tip_intersection_faster/
-SELECT b.ogc_fid, b.wkb_geometry, p.ogc_fid as plot_id 
+SELECT b.ogc_fid, p.ogc_fid as plot_id 
  FROM london_buildings.test_shapes AS b 
    INNER JOIN london_plots.test_plots AS p 
     ON ST_Intersects(ST_centroid(b.wkb_geometry), p.wkb_geometry);
+
+CREATE TABLE london_plots.plot_borough_labels AS
+SELECT b.ogc_fid, p.code as borough_code, p.name as borough_name 
+ FROM london_plots.plots AS b 
+   INNER JOIN london.boroughs AS p 
+    ON ST_Intersects(ST_centroid(b.wkb_geometry), p.geom); -- running
