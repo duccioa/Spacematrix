@@ -1,5 +1,4 @@
-﻿DELETE FROM topology.topology where name = 'ch13a_topology';
----- CLEAR THE DATABASE
+﻿---- CLEAR THE DATABASE
 DROP SCHEMA london_itn CASCADE;
 DROP SCHEMA london_itn_topology CASCADE;
 -- DELETE FROM topology.layer;
@@ -80,5 +79,3 @@ geom, 'london_itn_topology', 1, 0.05
 )
 FROM london_itn_topology.edge;
 
-
-ALTER TABLE hollowa

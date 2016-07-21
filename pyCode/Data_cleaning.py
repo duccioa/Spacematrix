@@ -6,7 +6,7 @@ import datetime
 import psycopg2
 import pandas as pd
 
-#### Merge building shapes with building heights and add columns ####
+#### Merge building shapes with building heights and add aggregated measures ####
 
 floor2floor_avg = 3 # set the average floor to floor height
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
@@ -41,8 +41,7 @@ print("Open conncetion: successful")
 cur = conn.cursor()
 dt = datetime.datetime.now()
 print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
-cur.execute('''
----- Plots to boroughs ----
+cur.execute('''---- Plots to boroughs ----
 CREATE TABLE london_plots.plots_to_boroughs AS
 SELECT b.ogc_fid, p.code as borough_code, p.name as borough_name
  FROM london_plots.plots AS b
@@ -96,20 +95,26 @@ CREATE INDEX merge_geom_spatial_idx
 	  (geom_plot);
 ---- Multi-dimensional index ----
 -- DROP SCHEMA london_index CASCADE;
+-- DROP TABLE london_index.multi_index CASCADE;
 CREATE SCHEMA london_index
 	AUTHORIZATION postgres;
-CREATE TABLE london_index.multi_index AS(
-	SELECT t1.area_plot, t1.geom_plot, t1.compact_plot, t1.borough_code FROM london_plots.merge t1 RIGHT JOIN
-	(SELECT plot_id,
+CREATE TABLE london_index.multi_index AS (
+	SELECT plot_id, area_plot, geom_plot, compact_plot, borough_code,
 		SUM(floor_space) AS total_floor_space,
 		SUM(footprint_building) AS total_footprint,
 		SUM(floor_space)/area_plot AS fsi,
 		SUM(footprint_building)/area_plot AS gsi,
-		SUM(footprint_building*compact_building)/SUM(footprint_building) AS w_avg_compact,
-		SUM(footprint_building*n_floors)/SUM(footprint_building) AS w_avg_nfloors
-		FROM london_plots.merge GROUP BY plot_id, area_plot) t2
-	ON t1.plot_id=t2.plot_id
+		SUM(floor_space*compact_building)/SUM(floor_space) AS w_avg_compact,
+		SUM(floor_space*n_floors)/SUM(floor_space) AS w_avg_nfloors
+		FROM london_plots.merge
+		GROUP BY plot_id, area_plot, geom_plot, compact_plot, borough_code
 );
+ALTER TABLE london_index.multi_index
+	ADD PRIMARY KEY (plot_id);
+CREATE INDEX multi_index_spatial_index
+	ON london_index.multi_index
+	USING gist
+	(geom_plot);
 ''')
 dt = datetime.datetime.now()
 print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))

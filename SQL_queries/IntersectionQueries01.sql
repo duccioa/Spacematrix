@@ -66,10 +66,6 @@ CREATE TABLE london_index.multi_index AS (
 		FROM london_plots.merge 
 		GROUP BY plot_id, area_plot, geom_plot, compact_plot, borough_code
 );
-
-
-
-
 ALTER TABLE london_index.multi_index 
 	ADD PRIMARY KEY (plot_id);
 CREATE INDEX multi_index_spatial_index 
@@ -78,3 +74,4 @@ CREATE INDEX multi_index_spatial_index
 	(geom_plot);
 
 
+show config_file;

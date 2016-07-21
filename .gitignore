@@ -2,3 +2,9 @@
 Icon?
 *.Rproj
 .Rproj.user
+*.RData
+*.RDataTmp
+.RData
+.idea
+.git
+.Rhistory
