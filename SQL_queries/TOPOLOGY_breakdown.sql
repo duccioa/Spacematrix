@@ -893,3 +893,114 @@ FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink30
 ) As f;
 COMMIT;
+
+----- DONE 5h:00min
+
+-- Patch
+--DROP TABLE temp_itn.roadlink_patch CASCADE;
+BEGIN;
+SET LOCAL work_mem = '96MB';
+create table temp_itn.roadlink_patch as (
+	select * from london_itn.roadlink 
+	where ST_intersects(wkb_geometry, (select ST_GeomFromText('POLYGON ((52333 177284, 531678 177284, 531678 184337, 52333 184337, 52333 177284))', 27700)))
+);
+alter table temp_itn.roadlink_patch 
+	add primary key (ogc_fid);
+create index roadlink_patch_spatial_idx 
+	on temp_itn.roadlink_patch 
+	using gist 
+	(wkb_geometry);
+COMMIT; 
+
+BEGIN;
+SET LOCAL work_mem = '512MB';
+SELECT
+ogc_fid,
+TopoGeo_AddLineString(
+'london_itn_topology', wkb_geometry
+) As edge_id
+FROM (
+SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink_patch
+) As f;
+COMMIT;
+
+-- Railway
+CREATE TABLE london_itn.railway AS (
+	SELECT
+);
+BEGIN;
+SET LOCAL work_mem = '96MB';
+create table temp_itn.railway as (
+	select * from london_itn.roadlink 
+	where ST_intersects(wkb_geometry, (select geom from london.boroughs where name = 'Westminister'))
+);
+alter table temp_itn.roadlink30 
+	add primary key (ogc_fid);
+create index roadlink30_spatial_idx 
+	on temp_itn.roadlink30 
+	using gist 
+	(wkb_geometry);
+COMMIT; 
+
+BEGIN;
+SET LOCAL work_mem = '512MB';
+SELECT
+ogc_fid,
+TopoGeo_AddLineString(
+'london_itn_topology', wkb_geometry
+) As edge_id
+FROM (
+SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink30
+) As f;
+COMMIT;
+
+
+-- RAILWAY
+BEGIN;
+SET LOCAL work_mem = '512MB';
+SELECT
+gid,
+TopoGeo_AddLineString(
+'london_itn_topology', st_linemerge(geom)
+) As edge_id
+FROM (
+SELECT gid, geom FROM london_itn.overground_rail
+) As f;
+COMMIT; -- DONE
+
+---- Create block polygons ----
+-- DROP SCHEMA london_blocks CASCADE;
+-- DROP TABLE london_blocks.blocks CASCADE;
+CREATE SCHEMA london_blocks 
+	AUTHORIZATION postgres;
+CREATE TABLE london_blocks.blocks (
+	block_id int,
+	wkb_geometry geometry, 
+	area_block real,
+	compact_block real,
+	perimeter_block real, 
+	borough_code character varying,
+	borough_name character varying
+	);
+
+DO
+$do$
+DECLARE i int;
+BEGIN 
+FOR i IN SELECT face_id FROM london_itn_topology.face WHERE face_id !=0 LOOP
+   INSERT INTO london_blocks.blocks (SELECT i, ST_GetFaceGeometry('london_itn_topology',i));
+END LOOP;
+END
+$do$; 
+ALTER TABLE london_blocks.blocks 
+	ADD PRIMARY KEY (block_id);
+CREATE INDEX london_blocks 
+	ON london_blocks.blocks 
+	USING gist 
+	(wkb_geometry);
+
+
+UPDATE london_blocks.blocks SET area_block = ST_area(wkb_geometry);
+UPDATE london_blocks.blocks SET compact_block = area_block/(ST_Area(ST_MinimumBoundingCircle(wkb_geometry)));
+UPDATE london_blocks.blocks SET perimeter_block = ST_perimeter(wkb_geometry);
+

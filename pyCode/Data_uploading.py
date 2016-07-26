@@ -7,6 +7,113 @@ import psycopg2
 import pandas as pd
 
 
+#### Railway ####
+## Import the england railway network from INSPIRE database
+file_root='/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/RailwayNetwork'
+file_name = 'railnetworkLine.shp'
+ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=england_railway" -skipfailures -append '
+conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
+cur = conn.cursor()
+cur.execute('''
+DROP SCHEMA england_railway CASCADE;
+CREATE SCHEMA england_railway
+	AUTHORIZATION postgres;
+CREATE TABLE england_railway.railnetworkline
+(
+	ogc_fid serial NOT NULL,
+	wkb_geometry geometry,
+	businessre character varying(254),
+	lowmeasure real,
+	highmeasur real,
+	status character varying(254),
+	type character varying(254),
+	rail_id bigserial NOT NULL,
+	CONSTRAINT railnetworkline_pkey PRIMARY KEY (rail_id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE england_railway.railnetworkline
+  OWNER TO postgres;
+CREATE INDEX railnetworkline_sp_idx
+	ON england_railway.railnetworkline
+	USING gist
+	(wkb_geometry);
+SELECT UpdateGeometrySRID('england_railway', 'railnetworkline', 'wkb_geometry', 27700);
+CREATE SCHEMA temp_railway_clipper
+	AUTHORIZATION postgres;
+''')
+conn.commit()
+conn.close()
+terminal_command = 'cd ' + file_root + '; ' + ogr_statement + file_name
+dt = datetime.datetime.now()
+print("Now running on" + file_root + "/" + file_name)
+print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+return_code = run(terminal_command, shell=True)  # import the first file to create the table
+dt = datetime.datetime.now()
+print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+
+## Import shape to remove underground areas from the railway network
+file_root='/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/RailwayNetwork'
+file_name = 'Underground_clipper.shp'
+ogr_statement = 'ogr2ogr -f "PostgreSQL" PG:"host=localhost dbname=msc user=postgres password=postgres schemas=temp_railway_clipper" -skipfailures -append '
+terminal_command = 'cd ' + file_root + '; ' + ogr_statement + file_name
+dt = datetime.datetime.now()
+print("Now running on" + file_root + "/" + file_name)
+print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+return_code = run(terminal_command, shell=True)  # import the first file to create the table
+dt = datetime.datetime.now()
+print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+
+conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
+cur = conn.cursor()
+cur.execute('''
+CREATE TABLE temp_railway_clipper.london_rail (
+	rail_id bigserial,
+	wkb_geometry geometry
+	);
+ALTER TABLE temp_railway_clipper.london_rail
+	ADD PRIMARY KEY (rail_id);
+CREATE INDEX london_rail_temp_spatial_idx
+	ON temp_railway_clipper.london_rail
+	USING gist
+	(wkb_geometry);
+INSERT INTO temp_railway_clipper.london_rail (wkb_geometry)
+	SELECT (
+		ST_CollectionExtract(
+			ST_intersection(
+				wkb_geometry,
+				(SELECT ST_buffer(geom, 100) FROM london.greaterlondon)
+					),2
+			)
+		)
+	FROM england_railway.railnetworkline;
+SELECT UpdateGeometrySRID('temp_railway_clipper', 'underground_clipper', 'wkb_geometry', 27700);
+SELECT UpdateGeometrySRID('temp_railway_clipper', 'london_rail', 'wkb_geometry', 27700);
+-- Subtract the clipper polygons
+CREATE TABLE london_itn.london_rail (
+	rail_id bigserial,
+	wkb_geometry geometry
+	);
+ALTER TABLE london_itn.london_rail
+	ADD PRIMARY KEY (rail_id);
+CREATE INDEX london_rail_spatial_idx
+	ON london_itn.london_rail
+	USING gist
+	(wkb_geometry);
+
+--http://gis.stackexchange.com/questions/126502/clip-geometries-in-postgis-table-if-they-are-inside-a-polygon
+INSERT INTO london_itn.london_rail (wkb_geometry)
+	SELECT ST_Difference(l.wkb_geometry, p.wkb_geometry) As geom
+		FROM
+		temp_railway_clipper.london_rail l, temp_railway_clipper.underground_clipper p;
+SELECT UpdateGeometrySRID('london_itn', 'london_rail', 'wkb_geometry', 27700);
+
+--DROP SCHEMA temp_railway_clipper CASCADE;
+''')
+conn.commit()
+conn.close()
+
 #### OS Mastermap - Topographic layer ####
 ## Building footprint shapes
 # In order to import gml files of the OS Mastermap topographic layer, the script navigates through the data folder

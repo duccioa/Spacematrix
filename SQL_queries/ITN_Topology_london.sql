@@ -35,6 +35,9 @@ SELECT ogc_fid, wkb_geometry FROM london_itn.roadlink
 -- 4b. Check the geometry
 SELECT ST_GetFaceGeometry('london_itn_topology',0);
 
+
+
+
 -- Create schema and table with face geometry
 DROP TABLE face_geom;
 CREATE SCHEMA london_blocks 
