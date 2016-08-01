@@ -2,6 +2,7 @@ require(rgeos)
 require(rgdal)
 require(data.table)
 require(ggplot2)
+source('/Users/duccioa/Documents/02_DataScience/02_Functions/R/add_alpha.R')
 map = readOGR(dsn = '/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/DbDump/', layer = 'london_blocks')
 index = read.csv('/Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/DbDump/block_multi_index.csv')
 index = data.table(index)
@@ -9,7 +10,7 @@ summary(index)
 sum(index$gsi >1)
 df = index[gsi <=1]
 summary(df)
-
+plot(df$gsi[df$fsi<30], df$fsi[df$fsi<30], pch=19, cex = 0.05, xlab='GSI', ylab='FSI', col=add.alpha('blue', 0.5))
 
 X = as.matrix(df[,.(fsi, gsi, area_block, compact_block, w_avg_compact, w_avg_nfloors)])
 X = scale(X)
