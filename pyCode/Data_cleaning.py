@@ -1,10 +1,7 @@
 # By Duccio Aiazzi as part of the MSc Smart Cities adn Urban Analytics at CASA - UCL
 # This script is used to prepare the data for the analysis
-from subprocess import run
-import os
 import datetime
 import psycopg2
-import pandas as pd
 
 #### Merge building shapes with building heights and add aggregated measures ####
 
@@ -34,14 +31,18 @@ print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
 conn.commit()
 conn.close()
 
-#### JOIN tables ####
-## Create three tables that connects buildings, plots and boroughs
+######################################## PREPARE PLOT DATA #############################################################
+## The following SQL query performs the following operations:
+# Creates three tables that connects plots, buildings and boroughs
+# Creates the table 'london_plots.merge' which is used to aggregate data by plots
+# Aggregates the data into the table 'london_index.plot_multi_index' - this table is used for the classification
 conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
 print("Open conncetion: successful")
 cur = conn.cursor()
 dt = datetime.datetime.now()
 print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
-cur.execute('''---- Plots to boroughs ----
+cur.execute('''
+---- Plots to boroughs ----
 CREATE TABLE london_plots.plots_to_boroughs AS
 SELECT b.ogc_fid, p.code as borough_code, p.name as borough_name
  FROM london_plots.plots AS b
@@ -98,7 +99,7 @@ CREATE INDEX merge_geom_spatial_idx
 -- DROP TABLE london_index.multi_index CASCADE;
 CREATE SCHEMA london_index
 	AUTHORIZATION postgres;
-CREATE TABLE london_index.multi_index AS (
+CREATE TABLE london_index.plot_multi_index AS (
 	SELECT plot_id, area_plot, geom_plot, compact_plot, borough_code,
 		SUM(floor_space) AS total_floor_space,
 		SUM(footprint_building) AS total_footprint,
@@ -109,12 +110,96 @@ CREATE TABLE london_index.multi_index AS (
 		FROM london_plots.merge
 		GROUP BY plot_id, area_plot, geom_plot, compact_plot, borough_code
 );
-ALTER TABLE london_index.multi_index
+ALTER TABLE london_index.plot_multi_index
 	ADD PRIMARY KEY (plot_id);
-CREATE INDEX multi_index_spatial_index
-	ON london_index.multi_index
+CREATE INDEX plot_multi_index_spatial_index
+	ON london_index.plot_multi_index
 	USING gist
 	(geom_plot);
+''')
+dt = datetime.datetime.now()
+print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+conn.commit()
+conn.close()
+
+######################################## PREPARE BLOCK DATA #############################################################
+## The same operations are peformed to aggregate data about street blocks:
+# Creates three tables that connects blocks, buildings and boroughs
+# Creates the table 'london_blocks.merge' which is used to aggregate data by blocks
+# Aggregates the data into the table 'london_index.block_multi_index' - this table is used for the classification
+conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
+print("Open conncetion: successful")
+cur = conn.cursor()
+dt = datetime.datetime.now()
+print('Starting Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
+cur.execute('''
+---- Blocks to boroughs ----
+CREATE TABLE london_blocks.blocks_to_boroughs AS
+SELECT b.block_id, p.code as borough_code, p.name as borough_name
+ FROM london_blocks.blocks AS b
+   INNER JOIN london.boroughs AS p
+    ON ST_Intersects(ST_centroid(b.wkb_geometry), p.geom); --done
+ALTER TABLE london_blocks.blocks_to_boroughs
+	ADD PRIMARY KEY (block_id);
+---- Buildings to blocks ----
+CREATE TABLE london_buildings.shapes_to_blocks AS
+SELECT b.ogc_fid, p.block_id as block_id
+ FROM london_buildings.shapes AS b
+   INNER JOIN london_blocks.blocks AS p
+    ON ST_Intersects(ST_centroid(b.wkb_geometry), p.wkb_geometry); --done
+ALTER TABLE london_buildings.shapes_to_blocks
+	ADD PRIMARY KEY (ogc_fid); -- done
+
+---- Building-plot joining table ----
+-- DROP TABLE london_blocks.merge CASCADE;
+CREATE TABLE london_blocks.merge AS (
+WITH
+	t_blocks AS (SELECT t1.block_id AS block_id, t1.wkb_geometry AS geom_block,
+		t1.area_block AS area_block, t1.compact_block AS compact_block, t2.borough_code
+		FROM london_blocks.blocks t1
+		RIGHT JOIN london_blocks.blocks_to_boroughs t2
+		ON t1.block_id = t2.block_id),
+	t_buildings AS (
+		SELECT t1.ogc_fid AS building_id, t2.block_id AS block_id2,
+			t1.area AS footprint_building, t1.area*t1.n_floors AS floor_space,t1.compactness AS compact_building, t1.n_floors
+		FROM london_buildings.shapes t1
+		RIGHT JOIN london_buildings.shapes_to_blocks t2
+		ON t1.ogc_fid = t2.ogc_fid)
+SELECT * FROM t_blocks t1 LEFT JOIN t_buildings t2 ON t1.block_id = t2.block_id2
+); --done
+select * from london_buildings.shapes_to_blocks limit 10;
+select * from london_blocks.merge limit 100;
+
+DELETE FROM london_blocks.merge WHERE building_id IS NULL;
+ALTER TABLE london_blocks.merge
+	DROP COLUMN block_id2,
+	ADD PRIMARY KEY (building_id);
+CREATE INDEX merge_block_geom_spatial_idx
+	  ON london_blocks.merge
+	  USING gist
+	  (geom_block);
+---- Multi-dimensional index ----
+-- DROP SCHEMA london_index CASCADE;
+-- DROP TABLE london_index.block_multi_index CASCADE;
+CREATE SCHEMA london_index
+	AUTHORIZATION postgres;
+CREATE TABLE london_index.block_multi_index AS (
+	SELECT block_id, area_block, geom_block, compact_block, borough_code,
+		SUM(floor_space) AS total_floor_space,
+		SUM(footprint_building) AS total_footprint,
+		SUM(floor_space)/area_block AS fsi,
+		SUM(footprint_building)/area_block AS gsi,
+		SUM(floor_space*compact_building)/SUM(floor_space) AS w_avg_compact,
+		SUM(floor_space*n_floors)/SUM(floor_space) AS w_avg_nfloors
+		FROM london_blocks.merge
+		GROUP BY block_id, area_block, geom_block, compact_block, borough_code
+);
+ALTER TABLE london_index.block_multi_index
+	ADD PRIMARY KEY (block_id);
+CREATE INDEX block_multi_index_spatial_index
+	ON london_index.block_multi_index
+	USING gist
+	(geom_block);
 ''')
 dt = datetime.datetime.now()
 print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
