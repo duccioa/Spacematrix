@@ -52,10 +52,10 @@ CREATE INDEX merge_geom_spatial_idx
 	  (geom_plot);
 ---- Multi-dimensional index ----
 -- DROP SCHEMA london_index CASCADE;
--- DROP TABLE london_index.multi_index CASCADE;
+-- DROP TABLE london_index.plot_multi_index CASCADE;
 CREATE SCHEMA london_index 
 	AUTHORIZATION postgres;
-CREATE TABLE london_index.multi_index AS (
+CREATE TABLE london_index.plot_multi_index AS (
 	SELECT plot_id, area_plot, geom_plot, compact_plot, borough_code,
 		SUM(floor_space) AS total_floor_space,
 		SUM(footprint_building) AS total_footprint,
@@ -72,6 +72,3 @@ CREATE INDEX multi_index_spatial_index
 	ON london_index.multi_index 
 	USING gist 
 	(geom_plot);
-
-
-show config_file;

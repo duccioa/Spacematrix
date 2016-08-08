@@ -96,7 +96,7 @@ CREATE INDEX merge_geom_spatial_idx
 	  (geom_plot);
 ---- Multi-dimensional index ----
 -- DROP SCHEMA london_index CASCADE;
--- DROP TABLE london_index.multi_index CASCADE;
+-- DROP TABLE london_index.plot_multi_index CASCADE;
 CREATE SCHEMA london_index
 	AUTHORIZATION postgres;
 CREATE TABLE london_index.plot_multi_index AS (
@@ -110,12 +110,13 @@ CREATE TABLE london_index.plot_multi_index AS (
 		FROM london_plots.merge
 		GROUP BY plot_id, area_plot, geom_plot, compact_plot, borough_code
 );
-ALTER TABLE london_index.plot_multi_index
+ALTER TABLE london_index.multi_index
 	ADD PRIMARY KEY (plot_id);
-CREATE INDEX plot_multi_index_spatial_index
-	ON london_index.plot_multi_index
+CREATE INDEX multi_index_spatial_index
+	ON london_index.multi_index
 	USING gist
 	(geom_plot);
+
 ''')
 dt = datetime.datetime.now()
 print('End Time: '+str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2))
@@ -166,10 +167,7 @@ WITH
 		RIGHT JOIN london_buildings.shapes_to_blocks t2
 		ON t1.ogc_fid = t2.ogc_fid)
 SELECT * FROM t_blocks t1 LEFT JOIN t_buildings t2 ON t1.block_id = t2.block_id2
-); --done
-select * from london_buildings.shapes_to_blocks limit 10;
-select * from london_blocks.merge limit 100;
-
+);
 DELETE FROM london_blocks.merge WHERE building_id IS NULL;
 ALTER TABLE london_blocks.merge
 	DROP COLUMN block_id2,
@@ -178,6 +176,7 @@ CREATE INDEX merge_block_geom_spatial_idx
 	  ON london_blocks.merge
 	  USING gist
 	  (geom_block);
+
 ---- Multi-dimensional index ----
 -- DROP SCHEMA london_index CASCADE;
 -- DROP TABLE london_index.block_multi_index CASCADE;

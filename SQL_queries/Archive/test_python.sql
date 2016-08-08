@@ -1,0 +1,3 @@
+﻿CREATE SCHEMA puppa 
+	AUTHORIZATION postgres;
+--DROP SCHEMA puppa CASCADE;

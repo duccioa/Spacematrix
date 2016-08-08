@@ -416,3 +416,44 @@ CREATE INDEX greaterlondon_geom_idx
 ''')
 conn.commit()
 conn.close()
+
+## River Thames - Remove river from blocks
+terminal_command="shp2pgsql -I -s 27700 /Users/duccioa/CLOUD/C07_UCL_SmartCities/08_Dissertation/03_Data/London/River_Thames/Simplified/river_thames.shp support.river_thames -expolodecollections | psql -d msc -U postgres -W"
+return_code = run(terminal_command, shell=True)
+conn = psycopg2.connect(database="msc", user="postgres", password="postgres", host="localhost", port="5432")
+print("Open conncetion: successful")
+cur = conn.cursor()
+cur.execute('''
+	CREATE TABLE london.river_thames (
+		id serial,
+		geom geometry
+	);
+	INSERT INTO london.river_thames (geom)
+		(SELECT (st_dump(geom)).geom from support.river_thames);
+	ALTER TABLE london.river_thames
+		ADD PRIMARY KEY (id);
+	CREATE INDEX river_thames_geom_idx
+		ON london.river_thames
+		USING gist
+		(geom);
+	-- Find blocks that fall within the river's shape
+	CREATE TABLE support.river_blocks AS
+	(
+		SELECT p.block_id, p.wkb_geometry
+			FROM london_blocks.blocks AS p
+				INNER JOIN london.river_thames AS n
+					ON ST_within(p.wkb_geometry, ST_buffer(n.geom, 20))
+	);
+	ALTER TABLE support.river_blocks
+		ADD PRIMARY KEY (block_id);
+	CREATE INDEX river_blocks_geom_idx
+		ON support.river_blocks
+		USING gist
+		(wkb_geometry);
+	INSERT INTO support.river_blocks
+		(SELECT block_id, wkb_geometry FROM london_blocks.blocks WHERE block_id IN (60874, 47766,48147,48111));
+	DELETE FROM london_blocks.blocks
+		WHERE block_id IN (SELECT block_id FROM london_blocks.blocks WHERE block_id IN (SELECT b.block_id FROM support.river_blocks b));
+''')
+conn.commit()
+conn.close()

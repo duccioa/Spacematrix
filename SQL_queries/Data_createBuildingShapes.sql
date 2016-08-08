@@ -34,33 +34,4 @@ CREATE INDEX plot_centroids_spatial_idx
 	USING gist
 	(geom_plot_centroids);
 
--- Create borough labels 
-ALTER TABLE london_buildings.shapes 
-	ADD COLUMN borough character varying;
-ALTER TABLE london_plots.plots 
-	ADD COLUMN borough character varying;
-ALTER TABLE london_buildings.shapes 
-	ADD COLUMN borough_code character varying;
-ALTER TABLE london_plots.plots 
-	ADD COLUMN borough_code character varying;
-
-
--- 
-CREATE TABLE london_plots.plot_labels (
-	id bigserial PRIMARY KEY NOT NULL,
-	ogc_plot int4,
-	borough_name character varying,
-	borough_code character varying
-);
-
--- Label plots-- 
-DO
-$do$
-DECLARE i int;
-BEGIN 
-FOR i IN SELECT gid FROM london.boroughs LOOP
-   INSERT INTO london_plots.plot_labels (ogc_plot, borough_name, borough_code) (select * from borough_label_plots(i)); --INSERT INTO london_plots.loop_test (select * from plot_intersect(i));
-END LOOP;
-END
-$do$; -- 15/07/2016 16.12 running
 

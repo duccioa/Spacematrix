@@ -16,7 +16,7 @@ create index roadlink22_spatial_idx
 	on temp_itn.roadlink22 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 3:22
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -28,7 +28,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink22
 ) As f;
-COMMIT; -- DONE 1:01
+COMMIT;
 
 --  Barnet 26
 BEGIN;
@@ -43,7 +43,7 @@ create index roadlink26_spatial_idx
 	on temp_itn.roadlink26 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 5:53
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -55,7 +55,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink26
 ) As f;
-COMMIT; -- DONE 4:36
+COMMIT;
 
 --  Bexley  25
 BEGIN;
@@ -70,7 +70,7 @@ create index roadlink25_spatial_idx
 	on temp_itn.roadlink25 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 4:01
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -82,7 +82,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink25
 ) As f;
-COMMIT; -- DONE 2:26
+COMMIT;
 
 --  Brent  03
 BEGIN;
@@ -97,7 +97,7 @@ create index roadlink03_spatial_idx
 	on temp_itn.roadlink03 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 5:19
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -109,7 +109,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink03
 ) As f;
-COMMIT; -- DONE 3:04
+COMMIT;
 
 --  Bromley  23
 BEGIN;
@@ -124,7 +124,7 @@ create index roadlink23_spatial_idx
 	on temp_itn.roadlink23 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -136,7 +136,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink23
 ) As f;
-COMMIT; -- DONE
+COMMIT;
 
 -- Camden 14
 BEGIN;
@@ -151,7 +151,7 @@ create index roadlink14_spatial_idx
 	on temp_itn.roadlink14 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -163,7 +163,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink14
 ) As f;
-COMMIT; -- DONE 1:45
+COMMIT;
 
 -- City of London 20
 BEGIN;
@@ -178,7 +178,7 @@ create index roadlink20_spatial_idx
 	on temp_itn.roadlink20 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 0:40
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -190,7 +190,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink20
 ) As f;
-COMMIT; -- DONE 0:31
+COMMIT;
 
 -- Croydon 07
 BEGIN;
@@ -205,7 +205,7 @@ create index roadlink07_spatial_idx
 	on temp_itn.roadlink07 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 6:42
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -217,7 +217,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink07
 ) As f;
-COMMIT; -- 4:13
+COMMIT;
 
 --  Ealing 29
 BEGIN;
@@ -232,7 +232,7 @@ create index roadlink29_spatial_idx
 	on temp_itn.roadlink29 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- 5:18
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -244,7 +244,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink29
 ) As f;
-COMMIT; -- DONE 5:57
+COMMIT;
 
 -- Enfield 06
 BEGIN;
@@ -259,7 +259,7 @@ create index roadlink06_spatial_idx
 	on temp_itn.roadlink06 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 4:05
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -271,7 +271,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink06
 ) As f;
-COMMIT; --4:55
+COMMIT;
 
 --  Greenwich 31
 BEGIN;
@@ -286,7 +286,7 @@ create index roadlink31_spatial_idx
 	on temp_itn.roadlink31 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE 5:17
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -298,7 +298,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink31
 ) As f;
-COMMIT; --DONE 5:10
+COMMIT;
 
 -- Hackney 16
 BEGIN;
@@ -313,7 +313,7 @@ create index roadlink16_spatial_idx
 	on temp_itn.roadlink16 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- 2:57
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -325,7 +325,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink16
 ) As f;
-COMMIT; -- DONE 3:18
+COMMIT;
 
 -- Hammersmith and Fulham 02
 BEGIN;
@@ -340,7 +340,7 @@ create index roadlink02_spatial_idx
 	on temp_itn.roadlink02 
 	using gist 
 	(wkb_geometry);
-COMMIT; --DONE 2:31
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -352,7 +352,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink02
 ) As f;
-COMMIT; -- DONE 2:39
+COMMIT;
 
 -- Haringey 12
 BEGIN;
@@ -367,7 +367,7 @@ create index roadlink12_spatial_idx
 	on temp_itn.roadlink12 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -379,7 +379,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink12
 ) As f;
-COMMIT; -- DONE 8.14
+COMMIT;
 
 -- Harrow 09
 BEGIN;
@@ -394,7 +394,7 @@ create index roadlink09_spatial_idx
 	on temp_itn.roadlink09 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -406,7 +406,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink09
 ) As f;
-COMMIT; -- DONE 8:25
+COMMIT;
 
 -- Havering 04
 BEGIN;
@@ -433,7 +433,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink04
 ) As f;
-COMMIT; -- DONE 8:15
+COMMIT;
 
 -- Hillingdon 18
 BEGIN;
@@ -448,7 +448,7 @@ create index roadlink18_spatial_idx
 	on temp_itn.roadlink18 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -460,7 +460,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink18
 ) As f;
-COMMIT; -- DONE 16:38
+COMMIT;
 
 -- Hounslow 11
 BEGIN;
@@ -475,7 +475,7 @@ create index roadlink11_spatial_idx
 	on temp_itn.roadlink11 
 	using gist 
 	(wkb_geometry);
-COMMIT; -- DONE
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -487,7 +487,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink11
 ) As f;
-COMMIT; -- DONE 14:48
+COMMIT;
 
 -- Islington 21
 BEGIN;
@@ -502,7 +502,7 @@ create index roadlink21_spatial_idx
 	on temp_itn.roadlink21 
 	using gist 
 	(wkb_geometry);
-COMMIT; --
+COMMIT;
 
 BEGIN;
 SET LOCAL work_mem = '512MB';
@@ -514,7 +514,7 @@ TopoGeo_AddLineString(
 FROM (
 SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink21
 ) As f;
-COMMIT; --
+COMMIT;
 
 -- Kensington and Chelsea 01
 BEGIN;
@@ -894,8 +894,6 @@ SELECT ogc_fid, wkb_geometry FROM temp_itn.roadlink30
 ) As f;
 COMMIT;
 
------ DONE 5h:00min
-
 -- Patch
 --DROP TABLE temp_itn.roadlink_patch CASCADE;
 BEGIN;
@@ -966,13 +964,28 @@ TopoGeo_AddLineString(
 FROM (
 SELECT gid, geom FROM london_itn.overground_rail
 ) As f;
-COMMIT; -- DONE
+COMMIT;
+
+-- RIVER THAMES
+BEGIN;
+SET LOCAL work_mem = '512MB';
+SELECT
+id,
+TopoGeo_AddLineString(
+'london_itn_topology', ST_ExteriorRing(geom)
+) As edge_id
+FROM (
+SELECT id, geom FROM london.river_thames
+) As f;
+COMMIT;
+
+
 
 ---- Create block polygons ----
 -- DROP SCHEMA london_blocks CASCADE;
 -- DROP TABLE london_blocks.blocks CASCADE;
-CREATE SCHEMA london_blocks 
-	AUTHORIZATION postgres;
+-- CREATE SCHEMA london_blocks 
+	-- AUTHORIZATION postgres;
 CREATE TABLE london_blocks.blocks (
 	block_id int,
 	wkb_geometry geometry, 
@@ -1000,6 +1013,11 @@ CREATE INDEX london_blocks
 	(wkb_geometry);
 
 
+DELETE FROM london_blocks.blocks 
+	WHERE ST_within(
+		(SELECT ST_centroid(wkb_geometry) FROM london_blocks.blocks), 
+		(SELECT geom FROM london.river_thames)
+		);
 UPDATE london_blocks.blocks SET area_block = ST_area(wkb_geometry);
 UPDATE london_blocks.blocks SET compact_block = area_block/(ST_Area(ST_MinimumBoundingCircle(wkb_geometry)));
 UPDATE london_blocks.blocks SET perimeter_block = ST_perimeter(wkb_geometry);
