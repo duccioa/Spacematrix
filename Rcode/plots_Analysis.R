@@ -127,7 +127,14 @@ x=scale(X)
 t=kmeans(x, nstart = 20,centers = 5, iter.max = 1000)
 plot(df_plot$gsi[df_plot$w_avg_nfloors<10], df_plot$w_avg_nfloors[df_plot$w_avg_nfloors<10], 
      pch=19, cex = 0.1, xlab='GSI', ylab='Average Number of Floors', col=t$cluster,
-     main = 'Plots - GSI vs Number of Floors \nClose-up', frame.plot=F)
-res=dbscan(x,eps=.4,min=10)
+     main = 'Plots - GSI vs Number of Floors \Results of k-means', frame.plot=F)
+res=dbscan(x,eps=.4,min=100)
+plot(df_plot$gsi[df_plot$w_avg_nfloors<12], df_plot$w_avg_nfloors[df_plot$w_avg_nfloors<12], 
+     pch=19, cex = 0.1, xlab='GSI', ylab='Average Number of Floors',
+     main = 'Plots - GSI vs Number of Floors', frame.plot=F)
+abline(h=2.5, col='red')
+abline(h=5.5, col='red')
+abline(h=9.5, col='red')
+abline(v=0.33, col='red')
+abline(v=0.66, col='red')
 
-g=ggplot(df_class_plot[w_avg_nfloors<=25], aes(gsi, w_avg_nfloors, col=label)) + geom_point()
